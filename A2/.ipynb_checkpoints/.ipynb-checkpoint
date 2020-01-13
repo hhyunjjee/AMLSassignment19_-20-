@@ -1,0 +1,469 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2020-01-09T04:51:34.236525Z",
+     "start_time": "2020-01-09T04:51:29.753219Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# Imports\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "from sklearn import svm, datasets, preprocessing\n",
+    "from sklearn.svm import SVC\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "from sklearn.utils import shuffle\n",
+    "from sklearn.metrics import classification_report,accuracy_score\n",
+    "from sklearn.model_selection import train_test_split, GridSearchCV, learning_curve, ShuffleSplit\n",
+    "from sklearn.metrics import classification_report, accuracy_score, confusion_matrix, recall_score, precision_score, f1_score\n",
+    "import pandas as pd\n",
+    "from pandas import DataFrame\n",
+    "from sklearn.datasets import load_iris ##\n",
+    "import os\n",
+    "from sklearn import svm\n",
+    "from tqdm._tqdm_notebook import tqdm_notebook"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Data Preparation"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2020-01-09T04:51:34.692533Z",
+     "start_time": "2020-01-09T04:51:34.239324Z"
+    }
+   },
+   "outputs": [
+    {
+     "ename": "ModuleNotFoundError",
+     "evalue": "No module named 'lab2_landmarks'",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mModuleNotFoundError\u001b[0m                       Traceback (most recent call last)",
+      "\u001b[0;32m<ipython-input-2-a70e7e8a136e>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m\u001b[0m\n\u001b[1;32m      1\u001b[0m \u001b[0;31m# Import landmarks\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m----> 2\u001b[0;31m \u001b[0;32mimport\u001b[0m \u001b[0mlab2_landmarks\u001b[0m \u001b[0;32mas\u001b[0m \u001b[0ml2\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m      3\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      4\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      5\u001b[0m \u001b[0;32mdef\u001b[0m \u001b[0mget_data\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;31mModuleNotFoundError\u001b[0m: No module named 'lab2_landmarks'"
+     ]
+    }
+   ],
+   "source": [
+    "# Import landmarks\n",
+    "import lab2_landmarks as l2\n",
+    "\n",
+    "\n",
+    "def get_data():\n",
+    "    # Target Index from lab2_landmarks: 2 (Gender_label), 3 (Emotion_label)\n",
+    "    return l2.extract_features_labels(3)\n",
+    "\n",
+    "# x: feature, y: label\n",
+    "x, y= get_data()\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2020-01-09T04:51:34.697912Z",
+     "start_time": "2020-01-09T04:51:32.212Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# Transpose of y\n",
+    "yT = np.array([y, -(y - 1)]).T\n",
+    "\n",
+    "# Train-test split\n",
+    "x, yT = shuffle (x, yT)\n",
+    "x_tr, x_te, y_tr, y_te = train_test_split(x, yT, train_size = 0.8, random_state=0)\n",
+    "\n",
+    "# Data reshaping\n",
+    "def reshapeX(x):\n",
+    "    return x.reshape((x.shape[0], x.shape[1] * x.shape[2]))\n",
+    "\n",
+    "def reshapeY(y):\n",
+    "    return list(zip(*y))[0]\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2020-01-09T04:51:34.701742Z",
+     "start_time": "2020-01-09T04:51:32.900Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# Generate and reshape the train and test dataset \n",
+    "train_images = reshapeX(x_tr)\n",
+    "test_images = reshapeX(x_te)\n",
+    "train_labels = reshapeY(y_tr)\n",
+    "test_labels = reshapeY(y_te)\n",
+    "\n",
+    "# Pre-process the train dataset for the classification\n",
+    "train_preprocess = preprocessing.scale(train_images)\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## SVM with Linear Kernel"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2020-01-09T04:51:34.705164Z",
+     "start_time": "2020-01-09T04:51:34.425Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# Define the parameter range\n",
+    "\n",
+    "param_linear = {\n",
+    "    'C': [0.01, 0.1, 1, 10],\n",
+    "    'gamma': [0.001, 0.01, 0.1, 1],\n",
+    "    'kernel': ['linear']    \n",
+    "}\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2020-01-09T04:51:35.030642Z",
+     "start_time": "2020-01-09T04:51:35.006634Z"
+    }
+   },
+   "outputs": [
+    {
+     "ename": "NameError",
+     "evalue": "name 'param_linear' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mNameError\u001b[0m                                 Traceback (most recent call last)",
+      "\u001b[0;32m<ipython-input-3-c583f5db9b1b>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m\u001b[0m\n\u001b[1;32m      1\u001b[0m \u001b[0;31m# Use GridSearchCV to get the best estimators with the optimal combination of hyper parameters\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      2\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m----> 3\u001b[0;31m \u001b[0mgs_linear\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mGridSearchCV\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mSVC\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mparam_linear\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mn_jobs\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0;34m-\u001b[0m\u001b[0;36m1\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mrefit\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0;32mTrue\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mverbose\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0;36m3\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m      4\u001b[0m \u001b[0mgs_linear\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mgs_linear\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mfit\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mtrain_preprocess\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mtrain_labels\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      5\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;31mNameError\u001b[0m: name 'param_linear' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "# Use GridSearchCV to get the best estimators with the optimal combination of hyper parameters\n",
+    "\n",
+    "gs_linear = GridSearchCV(SVC(), param_linear, n_jobs = -1, refit = True, verbose = 3)\n",
+    "gs_linear = gs_linear.fit(train_preprocess, train_labels)\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Choose the best hyper-parameter\n",
+    "clf_linear = gs_linear.best_estimator_\n",
+    "clf_linear.fit(train_images, train_labels)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print(\"Optimal combination of hyper-parameter with best estimators: \")\n",
+    "print(gs_linear.best_params_)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pred_linear = clf_linear.predict(test_images)\n",
+    "print(accuracy_score(test_labels, pred_linear))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2020-01-09T04:49:39.435284Z",
+     "start_time": "2020-01-09T04:49:39.419862Z"
+    }
+   },
+   "source": [
+    "## SVM with RBF Kernel"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Define the parameter range\n",
+    "\n",
+    "param_rbf = {\n",
+    "    'C': [0.01, 0.1, 1, 10],\n",
+    "    'gamma': [0.001, 0.01, 0.1, 1],\n",
+    "    'kernel': ['rbf']    \n",
+    "}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Use GridSearchCV to get the best estimators with the optimal combination of hyper parameters\n",
+    "\n",
+    "gs_rbf = GridSearchCV(SVC(), param_rbf, n_jobs = -1, refit = True, verbose = 3)\n",
+    "gs_rbf = gs_rbf.fit(train_preprocess, train_labels)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Choose the best hyper-parameter\n",
+    "clf_rbf = gs_rbf.best_estimator_\n",
+    "clf_rbf.fit(train_images, train_labels)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print(\"Optimal combination of hyper-parameter with best estimators: \")\n",
+    "print(gs_rbf.best_params_)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pred_rbf = clf_rbf.predict(test_images)\n",
+    "print(accuracy_score(test_labels, pred_rbf))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "## SVM with Polynomial Kernel"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "param_poly = {\n",
+    "    'C': [0.01, 0.1, 1, 10],\n",
+    "    'gamma': [0.001, 0.01, 0.1, 1],\n",
+    "    'kernel': ['poly']    \n",
+    "}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "gs_poly = GridSearchCV(SVC(), param_poly, n_jobs = -1, verbose = 10)\n",
+    "gs_poly = gs_poly.fit(train_preprocess, train_labels)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "clf_poly = gs_poly.best_estimator_\n",
+    "clf_poly.fit(train_images, train_labels)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print(\"Optimal combination of hyper-parameter with best estimators: \")\n",
+    "print(gs_poly.best_params_)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pred_poly = clf_poly.predict(test_images)\n",
+    "print(accuracy_score(test_labels, pred_poly))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Summary"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "kernel_summary = {'Types of Kernel' : ['Linear','RBF','Polynomial'],\n",
+    "           'Accuracy Score' : [accuracy_score(test_labels, pred_linear), accuracy_score(test_labels, pred_rbf), accuracy_score(test_labels, pred_poly)]}\n",
+    "\n",
+    "df_kernel = DataFrame(kernel_summary, columns= ['Types of Kernel', 'Accuracy Score'])\n",
+    "print(df_kernel)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "## Model Validation"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.9"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
