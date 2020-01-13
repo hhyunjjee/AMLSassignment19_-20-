@@ -25,16 +25,18 @@ from keras.models import load_model
 
 # ## Directory
 
-# In[220]:
+# In[227]:
 
 
-base_dir_b2= ("/Users/Hyunjee/Desktop/AMLS_19-20_HYUNJEE_KIM_SN16075203/B2")
+base_dir_b2 = os.getcwd()
 os.chdir(base_dir_b2)
 
 dataset_dir_b2 = os.path.join(base_dir_b2, 'img')
 labels_filename_b2 = os.path.join(base_dir_b2, 'labels.csv')
 
-test_base_dir_b2 = ("/Users/Hyunjee/Desktop/AMLS_19-20_HYUNJEE_KIM_SN16075203/Dataset/cartoon_set_test")
+test_base_dir_b2 = os.getcwd()
+test_base_dir_b2 = '/'.join(test_base_dir_b2.split('/')[:-1]) + '/Dataset/cartoon_set_test'
+
 test_dataset_dir_b2 = os.path.join(test_base_dir_b2, 'img')
 test_labels_filename_b2 = os.path.join(test_base_dir_b2, 'labels_test.csv')
 
@@ -79,40 +81,6 @@ df_b2 = data_frame_B2(labels_filename_b2)
 df_b2
 
 
-# ## New Test Data Preparation
-
-# In[221]:
-
-
-def test_df_B2 (test_labels_filename_b2):
-    df_b2 = pd.read_csv(test_labels_filename_b2)
-    df_b2.columns=['original']
-    df_b2["file_name"] = df_b2['original'].str.split("\t").str[3]
-    df_b2["eyecolour_label"] = df_b2['original'].str.split("\t").str[1]
-    del df_b2['original']
-    eye_colour = []
-    
-    for eye in df_b2.eyecolour_label:
-        if eye == '0':
-            eye_colour.append("Brown")
-        elif eye == '1':
-            eye_colour.append("Blue")
-        elif eye == '2':
-            eye_colour.append("Green")
-        elif eye == '3':
-            eye_colour.append("Gray")
-        else:
-            eye_colour.append("Black")
-    
-    df_b2['eye_colour'] = eye_colour
-    
-
-    return df_b2
-
-new_test_b2 = test_df_B2 (test_labels_filename_b2)
-new_test_b2
-
-
 # In[192]:
 
 
@@ -125,8 +93,6 @@ from keras.optimizers import adam
 from tensorflow.python.keras.applications.vgg16 import preprocess_input
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
-
-# ## Model Evaluation
 
 # In[193]:
 
@@ -178,6 +144,8 @@ validation_generator_b2 = data_generator_b2.flow_from_dataframe(
     
     
 
+
+# ## Model Evaluation
 
 # In[219]:
 
@@ -268,7 +236,7 @@ plt.savefig("model_B2_2.png", dpi=300)
 
 # ## Model Evaluation
 
-# In[215]:
+# In[228]:
 
 
 print("Test Dataset Preparataion")
@@ -284,7 +252,7 @@ sample_size_b2 = len(file_names_b2)
 
 model_pred_test_b2 = model2.predict_generator(test_generator_b2, sample_size_b2)
 
-model_path_b2 = '/Users/Hyunjee/Desktop/AMLS_19-20_HYUNJEE_KIM_SN16075203/B2/model_B2.h5'
+model_path_b2 = os.getcwd() + '/model_B2.h5'
 saved_model_b2 = load_model(model_path_b2)
 
 model_pred_test_b2 = saved_model_b2.predict_generator(test_generator_b2, sample_size_b2)
@@ -423,6 +391,40 @@ print('Train Accuracy: '+ str(train_metric[1]))
       
       
       
+
+
+# ## New Test Data Preparation
+
+# In[221]:
+
+
+def test_df_B2 (test_labels_filename_b2):
+    df_b2 = pd.read_csv(test_labels_filename_b2)
+    df_b2.columns=['original']
+    df_b2["file_name"] = df_b2['original'].str.split("\t").str[3]
+    df_b2["eyecolour_label"] = df_b2['original'].str.split("\t").str[1]
+    del df_b2['original']
+    eye_colour = []
+    
+    for eye in df_b2.eyecolour_label:
+        if eye == '0':
+            eye_colour.append("Brown")
+        elif eye == '1':
+            eye_colour.append("Blue")
+        elif eye == '2':
+            eye_colour.append("Green")
+        elif eye == '3':
+            eye_colour.append("Gray")
+        else:
+            eye_colour.append("Black")
+    
+    df_b2['eye_colour'] = eye_colour
+    
+
+    return df_b2
+
+new_test_b2 = test_df_B2 (test_labels_filename_b2)
+new_test_b2
 
 
 # ## Test Accuracy

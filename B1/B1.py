@@ -25,11 +25,13 @@ from keras.models import load_model
 
 # ## Directory
 
-# In[50]:
+# In[100]:
 
 
-base_dir = ("/Users/Hyunjee/Desktop/AMLS_19-20_HYUNJEE_KIM_SN16075203/B1")
-os.chdir(base_dir)
+# base_dir = ("/Users/Hyunjee/Desktop/AMLS_19-20_HYUNJEE_KIM_SN16075203/B1")
+# os.chdir(base_dir)
+
+base_dir = os.getcwd()
 
 dataset_dir = os.path.join(base_dir, 'img')
 labels_filename = os.path.join(base_dir, 'labels.csv')
@@ -37,7 +39,7 @@ labels_filename = os.path.join(base_dir, 'labels.csv')
 
 # ## Data Preparation
 
-# In[13]:
+# In[101]:
 
 
 def data_frame_B1 (labels_filename):
@@ -51,7 +53,7 @@ def data_frame_B1 (labels_filename):
     
 
 
-# In[14]:
+# In[102]:
 
 
 df = data_frame_B1(labels_filename)
@@ -221,7 +223,7 @@ plt.savefig("model_B1_2.png", dpi=300)
 # ## Model Evaluation 
 # 
 
-# In[92]:
+# In[103]:
 
 
 from keras.models import load_model
@@ -237,7 +239,7 @@ test_generator = test_data_generator.flow_from_dataframe(
 file_names = test_generator.filenames
 sample_size = len(file_names)
 
-model_path = '/Users/Hyunjee/Desktop/AMLS_19-20_HYUNJEE_KIM_SN16075203/B1/model_B1.h5'
+model_path = os.getcwd() + '/model_B1.h5'
 saved_model = load_model(model_path)
 
 model_pred_test = saved_model.predict_generator(test_generator, sample_size)
@@ -381,11 +383,13 @@ print('Train Accuracy: '+ str(train_metric[1]))
 test_labels_filename_b1
 
 
-# In[97]:
+# In[104]:
 
 
 
-test_base_dir_b1 = ("/Users/Hyunjee/Desktop/AMLS_19-20_HYUNJEE_KIM_SN16075203/Dataset/cartoon_set_test")
+test_base_dir_b1 = os.getcwd()
+test_base_dir_b1 = '/'.join(test_base_dir_b1)[:-1] + '/Dataset/cartoon_set_test'
+
 test_dataset_dir_b1 = os.path.join(test_base_dir_b1, 'img')
 test_labels_filename_b1 = os.path.join(test_base_dir_b1, 'labels_test.csv')
 
